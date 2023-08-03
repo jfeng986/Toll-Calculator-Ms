@@ -10,49 +10,69 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+func main() {
+	recv, err := NewDataReceiver()
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.HandleFunc("/ws", recv.wsHandler)
+	log.Println("Ready to receive data from OBU clients...")
+	http.ListenAndServe(":30000", nil)
+}
+
 type DataReceiver struct {
-	msg  chan types.OBUData
-	conn *websocket.Conn
+	msgch chan types.OBUData
+	conn  *websocket.Conn
+	prod  DataProducer
+}
+
+func NewDataReceiver() (*DataReceiver, error) {
+	var (
+		p          DataProducer
+		err        error
+		kafkaTopic = "obu-data"
+	)
+	p, err = NewKafkaProducer(kafkaTopic)
+	if err != nil {
+		log.Println("kafka producer error:", err)
+		return nil, err
+	}
+
+	return &DataReceiver{
+		msgch: make(chan types.OBUData, 128),
+		prod:  p,
+	}, nil
+}
+
+func (dr *DataReceiver) produceData(data types.OBUData) error {
+	return dr.prod.ProduceData(data)
 }
 
 func (dr *DataReceiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 	u := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+		ReadBufferSize:  1028,
+		WriteBufferSize: 1028,
 	}
 	conn, err := u.Upgrade(w, r, nil)
 	if err != nil {
-		panic(err)
+		fmt.Println("upgrade error:", err)
+		log.Fatal(err)
 	}
-	// defer conn.Close()
 	dr.conn = conn
-
-	go dr.receive()
+	go dr.Receive()
 }
 
-func (dr *DataReceiver) receive() {
-	fmt.Println("new OBU connected, receiving data...")
+func (dr *DataReceiver) Receive() {
+	log.Println("New OBU connected client connected !")
 	for {
 		var data types.OBUData
-		err := dr.conn.ReadJSON(&data)
-		if err != nil {
-			log.Println("error reading json:", err)
+		if err := dr.conn.ReadJSON(&data); err != nil {
+			log.Println("read error:", err)
 			continue
 		}
-		fmt.Printf("received OBU data from [%d] :: <lat %.2f, lon %.2f> \n", data.OBUID, data.Lat, data.Lon)
-		dr.msg <- data
+		fmt.Println("received message", data)
+		if err := dr.produceData(data); err != nil {
+			log.Println("kafka produce error:", err)
+		}
 	}
-}
-
-func NewDataReceiver() *DataReceiver {
-	return &DataReceiver{
-		msg: make(chan types.OBUData, 100),
-	}
-}
-
-func main() {
-	recv := NewDataReceiver()
-	http.HandleFunc("/ws", recv.wsHandler)
-	fmt.Println("listening on port 30000...")
-	http.ListenAndServe(":30000", nil)
 }
