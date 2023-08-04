@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"Toll-Calculator/types"
@@ -26,19 +25,14 @@ func NewKafkaProducer(topic string) (DataProducer, error) {
 	}
 	go func() {
 		for e := range p.Events() {
-			switch ev := e.(type) {
+			switch e.(type) {
 			case *kafka.Message:
-				if ev.TopicPartition.Error != nil {
-					err := fmt.Errorf("delivery failed: %v", ev.TopicPartition)
-					log.Println(err)
-				} else {
-					log.Printf("delivered message to %v\n", ev.TopicPartition) // log the success
-				}
 			default:
 				log.Printf("ignored event: %v\n", e) // log other events
 			}
 		}
 	}()
+
 	return &KafkaProducer{
 		producer: p,
 		topic:    topic,

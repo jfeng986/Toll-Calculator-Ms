@@ -37,7 +37,7 @@ func NewDataReceiver() (*DataReceiver, error) {
 		log.Println("kafka producer error:", err)
 		return nil, err
 	}
-
+	p = NewLogMiddleware(p)
 	return &DataReceiver{
 		msgch: make(chan types.OBUData, 128),
 		prod:  p,
@@ -50,8 +50,8 @@ func (dr *DataReceiver) produceData(data types.OBUData) error {
 
 func (dr *DataReceiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 	u := websocket.Upgrader{
-		ReadBufferSize:  1028,
-		WriteBufferSize: 1028,
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
 	}
 	conn, err := u.Upgrade(w, r, nil)
 	if err != nil {
@@ -70,9 +70,10 @@ func (dr *DataReceiver) Receive() {
 			log.Println("read error:", err)
 			continue
 		}
-		fmt.Println("received message", data)
+		log.Println("received message", data)
 		if err := dr.produceData(data); err != nil {
 			log.Println("kafka produce error:", err)
 		}
+
 	}
 }
