@@ -13,7 +13,7 @@ import (
 
 const (
 	sendInterval = time.Second
-	wsEndpoint   = "ws://localhost:30000/ws"
+	wsEndpoint   = "ws://localhost:30001/ws"
 )
 
 func genLatLon() (float64, float64) {

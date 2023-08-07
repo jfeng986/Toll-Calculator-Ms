@@ -17,7 +17,7 @@ func main() {
 	}
 	http.HandleFunc("/ws", recv.wsHandler)
 	log.Println("Ready to receive data from OBU clients...")
-	http.ListenAndServe(":30000", nil)
+	http.ListenAndServe(":30001", nil)
 }
 
 type DataReceiver struct {
