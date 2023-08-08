@@ -3,18 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 
 	"Toll-Calculator/types"
+
+	"google.golang.org/grpc"
 )
 
 func main() {
-	listenAddr := ":30000"
+	httpListenAddr := ":30000"
+	grpcListenAddr := ":31000"
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
 	svc = NewLogMiddleware(svc)
-	makeHTTPTransport(listenAddr, svc)
+	go makeHTTPTransport(httpListenAddr, svc)
+	makeGRPCTransport(grpcListenAddr, svc)
 }
 
 func makeHTTPTransport(listenAddr string, svc Aggregator) {
@@ -24,10 +29,26 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) {
 	http.ListenAndServe(listenAddr, nil)
 }
 
+func makeGRPCTransport(listenAddr string, svc Aggregator) error {
+	fmt.Println("GRPC transport running on port", listenAddr)
+	ln, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fmt.Println("stopping GRPC transport")
+		ln.Close()
+	}()
+	// create a new gRPC server
+	server := grpc.NewServer([]grpc.ServerOption{}...)
+	// register the server
+	types.RegisterAggregatorServer(server, NewAggregatorGRPCServer(svc))
+	return server.Serve(ln)
+}
+
 func handleGetInvoice(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		values, ok := r.URL.Query()["obu"]
-
 		if !ok {
 			writeJSON(w, http.StatusBadRequest, map[string]string{
 				"error": "obuID is missing",
