@@ -74,6 +74,5 @@ func (dr *DataReceiver) Receive() {
 		if err := dr.produceData(data); err != nil {
 			log.Println("kafka produce error:", err)
 		}
-
 	}
 }
