@@ -1,9 +1,8 @@
 package client
 
 import (
-	"context"
-
 	"Toll-Calculator/types"
+	"context"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

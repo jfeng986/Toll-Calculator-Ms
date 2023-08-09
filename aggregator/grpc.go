@@ -19,7 +19,7 @@ func NewAggregatorGRPCServer(svc Aggregator) *GPRCAggregatorServer {
 
 func (s *GPRCAggregatorServer) Aggregate(ctx context.Context, req *types.AggregateRequest) (*types.None, error) {
 	distance := types.Distance{
-		OBUID: int(req.ObuID),
+		ObuID: int(req.ObuID),
 		Value: req.Value,
 		Unix:  req.Unix,
 	}

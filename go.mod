@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/minio/websocket v1.6.0
 	github.com/sirupsen/logrus v1.8.1
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 )

@@ -39,7 +39,7 @@ func (i *InvoiceAggregator) CalculateInvoice(obuID int) (*types.Invoice, error) 
 		return nil, err
 	}
 	inv := &types.Invoice{
-		OBUID:         obuID,
+		ObuID:         obuID,
 		TotalDistance: dist,
 		TotalAmount:   basePrice * dist,
 	}

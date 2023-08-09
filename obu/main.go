@@ -45,7 +45,7 @@ func main() {
 		for i := 0; i < len(obuIDs); i++ {
 			lat, lon := genLatLon()
 			data := types.OBUData{
-				OBUID: obuIDs[i],
+				ObuID: obuIDs[i],
 				Lat:   lat,
 				Lon:   lon,
 			}

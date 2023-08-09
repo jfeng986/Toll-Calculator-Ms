@@ -17,7 +17,7 @@ func NewMemoryStore() *MemoryStore {
 }
 
 func (m *MemoryStore) Insert(d types.Distance) error {
-	m.data[d.OBUID] += d.Value
+	m.data[d.ObuID] += d.Value
 	return nil
 }
 
